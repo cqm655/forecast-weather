@@ -12,7 +12,7 @@ export default function Map() {
   const [weatherInfo, setWeatherInfo] = useState("");
   const [layer, setLayer] = useState("wind");
   const [playPauseButton, setPlayPauseButton] = useState(false);
-  const [sliderTimeInfo, setSliderTimeInfo] = useState("");
+  const [sliderTimeInfo, setSliderTimeInfo] = useState(Date);
 
   maptilersdk.config.apiKey = "34reqe0ApIH5b9TTP43k";
 
@@ -105,14 +105,18 @@ export default function Map() {
         const endDate = weatherLayer.getAnimationEndDate();
         let currentDate = weatherLayer.getAnimationTimeDate();
         refreshTime();
-        // @ts-ignore
-        timeSlider.min = +startDate;
-        // @ts-ignore
-        timeSlider.max = +endDate;
-        // @ts-ignore
-        timeSlider.ariaValueNow = +currentDate;
 
-        console.log(timeSlider);
+        timeSlider.min = +startDate;
+
+        timeSlider.max = +endDate;
+
+        timeSlider.value = +currentDate;
+
+        timeSlider.addEventListener("input", function (e) {
+          // const d = weatherLayer.getAnimationTimeDate();
+          // console.log(d);
+          weatherLayer?.setAnimationTime(timeSlider.value / 1000);
+        });
       });
     }
 
@@ -130,12 +134,15 @@ export default function Map() {
 
     // Update the date time display
     timeSlider.addEventListener("input", function (e) {
-      const d = weatherLayer.getAnimationTimeDate();
-      console.log(d);
+      // const d = weatherLayer.getAnimationTimeDate();
+      // console.log(d);
     });
     function refreshTime() {
-      weatherLayer.setAnimationTime(timeSlider.value / 1000);
+      console.log("1");
+      // weatherLayer?.setAnimationTime(timeSlider.value / 1000);
+      const d = weatherLayer?.getAnimationTimeDate();
       // setSliderTimeInfo(d);
+      console.log(d);
     }
     function createWeatherLayer(layer: string) {
       let weatherLayer = null;
