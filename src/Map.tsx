@@ -307,6 +307,7 @@ export default function Map() {
           properties: {
             message: "Foo",
           },
+          id: "s",
           geometry: {
             type: "Point",
             width: "50px",
@@ -327,8 +328,14 @@ export default function Map() {
       el.style.backgroundRepeat = "no-repeat";
       el.style.backgroundSize = "contain";
 
+      if (marker.id === "s") {
+        el.style.backgroundColor = "red";
+      }
+
       // el.addEventListener("click", () => {
-      //   window.alert(marker.properties.message);
+      //   if (marker.id === "s") {
+      //     el.style.backgroundColor = "red";
+      //   }
       // });
       // add marker to map
       new maptilersdk.Marker({ element: el })
