@@ -8,7 +8,7 @@ export default function Map() {
   const mapContainer = useRef(null);
   const map = useRef(null);
   const MD = { lng: 28.3896969, lat: 46.9803875 };
-  const [zoom] = useState(8);
+  const [zoom] = useState(10);
   const [weatherInfo, setWeatherInfo] = useState("");
   const [layer, setLayer] = useState("wind");
   const [playPauseButton, setPlayPauseButton] = useState(false);
@@ -104,7 +104,6 @@ export default function Map() {
         const startDate = weatherLayer.getAnimationStartDate();
         const endDate = weatherLayer.getAnimationEndDate();
         let currentDate = weatherLayer.getAnimationTimeDate();
-        refreshTime();
 
         timeSlider.min = +startDate;
 
@@ -113,37 +112,17 @@ export default function Map() {
         timeSlider.value = +currentDate;
 
         timeSlider.addEventListener("input", function (e) {
-          // const d = weatherLayer.getAnimationTimeDate();
-          // console.log(d);
+          const d = weatherLayer.getAnimationTimeDate();
+          //set changing forecast text
+          setSliderTimeInfo(d.toString());
+          //set step of the forecast slider
+          //The forecast is showing from present time, but if json was emitted earlier, then now time,
+          //the slider will be a step ahead
           weatherLayer?.setAnimationTime(timeSlider.value / 1000);
         });
       });
     }
 
-    // Called when the animation is progressing
-    weatherLayer?.on("tick", (event) => {
-      refreshTime();
-
-      updatePointerValue(pointerLngLat);
-    });
-
-    // Called when the time is manually set
-    weatherLayer?.on("animationTimeSet", (event) => {
-      refreshTime();
-    });
-
-    // Update the date time display
-    timeSlider.addEventListener("input", function (e) {
-      // const d = weatherLayer.getAnimationTimeDate();
-      // console.log(d);
-    });
-    function refreshTime() {
-      console.log("1");
-      // weatherLayer?.setAnimationTime(timeSlider.value / 1000);
-      const d = weatherLayer?.getAnimationTimeDate();
-      // setSliderTimeInfo(d);
-      console.log(d);
-    }
     function createWeatherLayer(layer: string) {
       let weatherLayer = null;
       switch (layer) {
@@ -154,6 +133,7 @@ export default function Map() {
             opacity: 0.9,
           });
           createSliderData(weatherLayer);
+          playStopBtn(weatherLayer);
           break;
         case "cloud":
           weatherLayer = new maptilerweather.RadarLayer({
@@ -164,6 +144,7 @@ export default function Map() {
           });
           //Using the animateByFactor(3600) function of the precipitation layer, we animate it in time (next 4 days). Each second of animation corresponds to one hour.
           createSliderData(weatherLayer);
+          playStopBtn(weatherLayer);
           break;
         case "temperature":
           weatherLayer = new maptilerweather.TemperatureLayer({
@@ -173,6 +154,7 @@ export default function Map() {
             smooth: true,
           });
           createSliderData(weatherLayer);
+          playStopBtn(weatherLayer);
           break;
         case "wind":
           weatherLayer = new maptilerweather.WindLayer({
@@ -188,6 +170,7 @@ export default function Map() {
             fastIsLarger: true,
           });
           createSliderData(weatherLayer);
+          playStopBtn(weatherLayer);
           break;
       }
       return weatherLayer;
@@ -246,6 +229,93 @@ export default function Map() {
         return weatherLayer;
       }
     }
+    function playStopBtn(weatherLayer: any) {
+      let isActive = false;
+
+      weatherLayer.on("sourceReady", () => {
+        document
+          .getElementById("play-pause-bt")
+          .addEventListener("click", function () {
+            if (isActive) {
+              weatherLayer?.animateByFactor(0);
+              const d = weatherLayer?.getAnimationTimeDate();
+              timeSlider.value = +d;
+              //set changing forecast text
+              setSliderTimeInfo(d.toString());
+              console.log(sliderTimeInfo);
+              weatherLayer?.setAnimationTime(timeSlider.value / 1000);
+            } else {
+              weatherLayer?.animateByFactor(3600);
+            }
+            isActive = !isActive;
+          });
+        function refreshTime() {
+          const d = weatherLayer.getAnimationTimeDate();
+          setSliderTimeInfo(d.toString());
+          timeSlider.value = +d;
+        }
+        // Called when the animation is progressing
+        weatherLayer?.on("tick", (event) => {
+          refreshTime();
+          updatePointerValue(pointerLngLat);
+        });
+
+        // Called when the time is manually set
+        weatherLayer?.on("animationTimeSet", (event) => {
+          refreshTime();
+        });
+      });
+    }
+
+    const geojson = {
+      type: "FeatureCollection",
+      features: [
+        {
+          type: "Feature",
+          properties: {
+            message: "Foo",
+          },
+          geometry: {
+            type: "Point",
+            width: "50px",
+            height: "100px",
+            coordinates: [29.41114, 46.63674],
+          },
+        },
+        {
+          type: "Feature",
+          properties: {
+            message: "Foo",
+          },
+          geometry: {
+            type: "Point",
+            width: "50px",
+            height: "100px",
+            coordinates: [28.60774, 47.14216],
+          },
+        },
+      ],
+    };
+    // add markers to map
+    geojson.features.forEach((marker) => {
+      // create a DOM element for the marker
+      const el = document.createElement("div");
+      el.className = "marker";
+      el.style.backgroundImage = `url(https://media.tenor.com/9q33bKxQ9DAAAAAi/wind-tower-windmills.gif)`;
+      el.style.width = `50px`;
+      el.style.height = `100px`;
+      el.style.backgroundRepeat = "no-repeat";
+      el.style.backgroundSize = "contain";
+
+      // el.addEventListener("click", () => {
+      //   window.alert(marker.properties.message);
+      // });
+      // add marker to map
+      new maptilersdk.Marker({ element: el })
+        // @ts-ignore
+        .setLngLat(marker.geometry.coordinates)
+        .addTo(map.current);
+    });
   }, [MD.lng, MD.lat, zoom, sliderTimeInfo]);
 
   return (
