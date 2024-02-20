@@ -3,6 +3,7 @@ import * as maptilersdk from "@maptiler/sdk";
 import "@maptiler/sdk/dist/maptiler-sdk.css";
 import "./Map.css";
 import * as maptilerweather from "@maptiler/weather";
+import { data } from "@maptiler/sdk";
 
 export default function Map() {
   const mapContainer = useRef(null);
@@ -53,6 +54,32 @@ export default function Map() {
       return weatherLayer;
     }
 
+    const myCustomRamp = new maptilersdk.ColorRamp({
+      stops: [
+        { value: 0, color: [98, 113, 184, 255] },
+        { value: 0.5, color: [95, 109, 177, 255] },
+        { value: 1, color: [85, 111, 176, 255] },
+        { value: 1.5, color: [71, 111, 169, 255] },
+        { value: 2, color: [67, 126, 166, 255] },
+        { value: 2.5, color: [69, 134, 168, 255] },
+        { value: 3, color: [73, 146, 166, 255] },
+        { value: 3.5, color: [74, 146, 153, 255] },
+        { value: 4, color: [74, 145, 142, 255] },
+        { value: 4.5, color: [75, 145, 141, 255] },
+        { value: 5, color: [74, 147, 160, 255] },
+        { value: 6, color: [74, 146, 146, 255] },
+        { value: 8, color: [79, 164, 73, 255] },
+        { value: 10, color: [104, 161, 54, 255] },
+        { value: 13, color: [158, 137, 63, 255] },
+        { value: 15, color: [155, 105, 87, 255] },
+        { value: 17, color: [142, 64, 96, 255] },
+        { value: 20, color: [147, 74, 143, 255] },
+        { value: 23, color: [116, 91, 155, 255] },
+        { value: 25, color: [94, 112, 161, 255] },
+        { value: 30, color: [91, 136, 161, 255] },
+      ],
+    });
+
     //create object layer, witch will be at the base of all other layers
     const windLayer = new maptilerweather.WindLayer({
       id: "wind_1",
@@ -64,14 +91,12 @@ export default function Map() {
       opacity: 0.2,
       color: dataWind.particleColor,
       fastColor: dataWind.particleFastColor,
-      // color: [0, 0, 0, 30],
-      // fastColor: [0, 0, 0, 100],
       fastIsLarger: true,
     });
     //set background water color, and also add layers
     map.current.on("load", function () {
-      map.current.setPaintProperty("Water", "fill-color", "rgba(0,0,0, 0.4)");
-      map.current.addLayer(windLayer, "Water", { opacity: 0.4 });
+      map.current.setPaintProperty("Water", "fill-color", "rgba(0,0,0, 0)");
+      map.current.addLayer(windLayer, "Water", { opacity: 0.8 });
       map.current.addLayer(initWeatherMap(layer), "Water");
     });
 
@@ -159,15 +184,10 @@ export default function Map() {
         case "wind":
           weatherLayer = new maptilerweather.WindLayer({
             id: "wind",
-            speed: dataWind.particleSpeed,
-            fadeFactor: dataWind.fadeFactor,
-            maxAmount: dataWind.numParticles,
-            density: dataWind.particleDensity,
-            size: dataWind.particleSize,
-            opacity: dataWind.fadeFactor,
-            color: dataWind.particleColor,
-            fastColor: dataWind.particleFastColor,
-            fastIsLarger: true,
+            // @ts-ignore
+            colorramp: myCustomRamp,
+            color: [255, 255, 255, 255],
+            fastColor: [255, 255, 255, 255],
           });
           createSliderData(weatherLayer);
           playStopBtn(weatherLayer);
